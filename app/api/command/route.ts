@@ -55,19 +55,25 @@ export async function POST(req: Request) {
         cache: "no-store"
       });
 
+      const rawText = await macResponse.text();
+
       if (!macResponse.ok) {
-        const fallback = await safeReadText(macResponse);
         return Response.json({
           status: "Mac agent unavailable",
           reply: "Sir, your backend is online, but the Mac agent did not complete the request.",
           mode: "backend_only",
           originalText: text,
           actionHint: parsed.actionHint,
-          macAgentError: fallback
+          macAgentError: rawText
         });
       }
 
-      const data = (await macResponse.json()) as MacAgentResponse;
+      let data: MacAgentResponse = {};
+      try {
+        data = JSON.parse(rawText) as MacAgentResponse;
+      } catch {
+        data = {};
+      }
 
       return Response.json({
         status: typeof data.status === "string" ? data.status : parsed.status,
@@ -96,13 +102,5 @@ export async function POST(req: Request) {
       },
       { status: 500 }
     );
-  }
-}
-
-async function safeReadText(response: Response): Promise<string> {
-  try {
-    return await response.text();
-  } catch {
-    return "Unable to read upstream error.";
   }
 }
