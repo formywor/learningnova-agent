@@ -4,6 +4,13 @@ type CommandRequest = {
   text?: string;
 };
 
+type MacAgentResponse = {
+  status?: unknown;
+  reply?: unknown;
+  actionHint?: unknown;
+  result?: unknown;
+};
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as CommandRequest;
@@ -60,7 +67,7 @@ export async function POST(req: Request) {
         });
       }
 
-      const data = await macResponse.json();
+      const data = (await macResponse.json()) as MacAgentResponse;
 
       return Response.json({
         status: typeof data.status === "string" ? data.status : parsed.status,
