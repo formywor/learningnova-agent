@@ -1,5 +1,8 @@
 import { updateJobReport } from "../../../../lib/jobStore";
 
+export const runtime = "nodejs";
+export const maxDuration = 10;
+
 type ReportRequest = {
   job_id?: string;
   agent_name?: string;

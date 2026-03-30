@@ -1,5 +1,8 @@
 import { getNextQueuedJob } from "../../../../lib/jobStore";
 
+export const runtime = "nodejs";
+export const maxDuration = 10;
+
 type PollRequest = {
   agent_name?: string;
   platform?: string;

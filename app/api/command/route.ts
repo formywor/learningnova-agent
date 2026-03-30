@@ -1,65 +1,47 @@
-type TTSRequest = {
+import { parseCommand } from "../../../lib/commandParser";
+import { createJob } from "../../../lib/jobStore";
+
+export const runtime = "nodejs";
+export const maxDuration = 10;
+
+type CommandRequest = {
   text?: string;
-  voiceId?: string;
 };
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as TTSRequest;
+    const body = (await req.json()) as CommandRequest;
     const text = (body.text ?? "").trim();
-    const voiceId = (body.voiceId ?? "Matthew").trim();
 
     if (!text) {
-      return new Response("Missing text", { status: 400 });
+      return Response.json(
+        {
+          status: "Missing command",
+          reply: "Sir, I did not receive any command text."
+        },
+        { status: 400 }
+      );
     }
 
-    const apiKey = process.env.MURF_API_KEY;
-    if (!apiKey) {
-      return new Response("Missing MURF_API_KEY", { status: 500 });
-    }
+    const parsed = parseCommand(text);
+    const job = createJob(text);
 
-    const murfResponse = await fetch("https://global.api.murf.ai/v1/speech/stream", {
-      method: "POST",
-      headers: {
-        "api-key": apiKey,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        voice_id: voiceId,
-        text,
-        locale: "en-US",
-        model: "FALCON",
-        format: "MP3",
-        sampleRate: 24000,
-        channelType: "MONO"
-      }),
-      cache: "no-store"
-    });
-
-    if (!murfResponse.ok || !murfResponse.body) {
-      const errText = await safeReadText(murfResponse);
-      return new Response(`Murf error: ${errText}`, { status: 502 });
-    }
-
-    return new Response(murfResponse.body, {
-      status: 200,
-      headers: {
-        "Content-Type": "audio/mpeg",
-        "Cache-Control": "no-store"
-      }
+    return Response.json({
+      status: parsed.status,
+      reply: parsed.reply,
+      mode: "queued",
+      originalText: text,
+      actionHint: parsed.actionHint,
+      jobId: job.id
     });
   } catch (err) {
-    return new Response(
-      err instanceof Error ? err.message : "Unknown backend error",
+    return Response.json(
+      {
+        status: "Backend error",
+        reply: "Sir, the backend ran into an error while handling your request.",
+        error: err instanceof Error ? err.message : "Unknown error"
+      },
       { status: 500 }
     );
-  }
-}
-
-async function safeReadText(response: Response): Promise<string> {
-  try {
-    return await response.text();
-  } catch {
-    return "Unable to read upstream error.";
   }
 }
