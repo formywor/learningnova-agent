@@ -7,6 +7,8 @@ export default function HomePage() {
         <li>/api/health</li>
         <li>/api/command</li>
         <li>/api/tts</li>
+        <li>/api/mac/poll</li>
+        <li>/api/mac/report</li>
       </ul>
     </main>
   );
