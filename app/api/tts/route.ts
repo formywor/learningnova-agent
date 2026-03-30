@@ -32,7 +32,8 @@ export async function POST(req: Request) {
         format: "MP3",
         sampleRate: 24000,
         channelType: "MONO"
-      })
+      }),
+      cache: "no-store"
     });
 
     if (!murfResponse.ok || !murfResponse.body) {

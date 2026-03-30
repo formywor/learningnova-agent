@@ -1,4 +1,4 @@
-import { parseCommand } from "@/lib/commandParser";
+import { parseCommand } from "../../../lib/commandParser";
 
 type CommandRequest = {
   text?: string;
@@ -63,12 +63,12 @@ export async function POST(req: Request) {
       const data = await macResponse.json();
 
       return Response.json({
-        status: data.status ?? parsed.status,
-        reply: data.reply ?? parsed.reply,
+        status: typeof data.status === "string" ? data.status : parsed.status,
+        reply: typeof data.reply === "string" ? data.reply : parsed.reply,
         mode: "live",
         originalText: text,
-        actionHint: data.actionHint ?? parsed.actionHint,
-        macResult: data.result ?? null
+        actionHint: typeof data.actionHint === "string" ? data.actionHint : parsed.actionHint,
+        macResult: "result" in data ? data.result : null
       });
     } catch (err) {
       return Response.json({
